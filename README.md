@@ -1,147 +1,225 @@
-# ByteBazaar
+# Byte Bazaar
 
-ByteBazaar is a decentralized “Data App Store” built on the Sui blockchain. It mints Data NFTs for large-volume data assets (video, images, text, model weights, etc.), enabling on-chain proof of ownership and marketplace trading. Move smart contracts power real-time royalty splitting, annotation-task bounties, and DAO governance. Off-chain storage uses Walrus to fragment and store raw assets (20 GB+).
+A decentralized data marketplace built on Sui blockchain, enabling secure data trading, labeling tasks, and community governance.
 
----
+## Overview
 
-## Table of Contents
-
-- [Features](#features)  
-- [Architecture](#architecture)  
-- [Getting Started](#getting-started)  
-- [Project Layout](#project-layout)  
-- [Move Modules & APIs](#move-modules--apis)  
-- [Development & Testing](#development--testing)  
-- [Contributing](#contributing)  
-- [License](#license)  
-
----
-
-## Features
-
-- **DataNFT**  
-  - Mint, update, and freeze/unfreeze on-chain data assets  
-  - Store metadata, SHA-256 hash, storage URL, license hash, versioning  
-  - Manage royalty recipients and basis points  
-- **Marketplace**  
-  - List and purchase DataNFTs via Sui kiosks  
-  - Automated royalty revenue splitting per NFT configuration  
-- **Annotation Tasks**  
-  - Publish labeling tasks with SUI rewards and escrow  
-  - Claim tasks, submit results, review and finalize outcomes  
-  - On-chain events for task lifecycle  
-- **DAO Governance**  
-  - Create, vote on, and execute governance proposals  
-  - Track aye/nay votes, enforce deadlines, emit events  
-- **Admin & Marketplace Capabilities**  
-  - AdminCap for DAO operations  
-  - MarketplaceCap for listing and trading operations  
-
----
+Byte Bazaar is a comprehensive platform that combines NFT-based data assets, marketplace functionality, task management, and DAO governance. It provides a complete ecosystem for data creators, labelers, validators, and consumers.
 
 ## Architecture
 
+### Core Modules
+
 ```
-+----------------+      +----------------+      +----------------+
-|   DataNFT      |<---->| Marketplace    |<---->|   Revenue      |
-|  (NFT Module)  |      |    Module      |      |  Module        |
-+----------------+      +----------------+      +----------------+
-         ^                        |                     |
-         |                        v                     v
-    Royalty Split            Task Module           DAO Module
-         |                        |                     |
-         +--- Smart Contract Layer (Move on Sui) -----+
-                         |
-                   Off-chain Storage
-                    (Walrus IPFS)
+byte_bazaar/
+├── sources/
+│   ├── entry.move              # Main entry point and capability management
+│   ├── nft.move                # DataNFT implementation with royalties
+│   ├── market.move             # Marketplace for trading DataNFTs
+│   ├── task.move               # Data labeling task management
+│   ├── dao.move                # Decentralized governance system
+│   ├── revenue.move            # Revenue distribution logic
+│   └── lib.move                # Shared utilities and types
+└── tests/
+    └── byte_bazaar_tests.move  # Comprehensive test suite
 ```
 
-- **On-chain**: Move smart contracts in `sources/byte_bazaar.move`.  
-- **Off-chain**: Walrus fragments raw files for decentralized storage.  
+## Features
 
----
+### 🎨 DataNFT System
+
+- **Unique Data Assets**: Each dataset is represented as a unique NFT with metadata
+- **Royalty System**: 5% global royalty on secondary sales
+- **Transfer Policy**: Automated royalty collection via Sui's Kiosk system
+- **Versioning**: Support for dataset updates with version tracking
+- **Walrus Integration**: Storage tickets for decentralized data storage
+
+### 🏪 Marketplace
+
+- **Kiosk Integration**: Built on Sui's standard Kiosk framework
+- **Automated Royalties**: Seamless royalty distribution on trades
+- **Freeze Protection**: Prevents trading of frozen/disputed assets
+- **Event Tracking**: Comprehensive marketplace event logging
+
+### 📋 Task Management
+
+- **Data Labeling**: Crowdsourced data annotation system
+- **Golden Samples**: Quality control through reference data
+- **Multi-Validator Consensus**: Democratic validation process
+- **Escrow System**: Secure payment handling with dispute resolution
+- **Deadline Management**: Time-bound task completion
+
+### 🏛️ DAO Governance
+
+- **Proposal System**: Community-driven decision making
+- **Voting Mechanism**: Weighted voting with configurable parameters
+- **Asset Management**: Freeze/unfreeze NFTs through governance
+- **Upgrade Authority**: Controlled smart contract upgrades
+- **Execution Framework**: Automated proposal execution
+
+### 💰 Revenue Distribution
+
+- **Multi-Recipient Royalties**: Flexible revenue sharing
+- **Basis Points System**: Precise percentage allocations
+- **Automatic Distribution**: Seamless payment splitting
+
+## Capabilities & Permissions
+
+The system uses capability-based access control:
+
+- **`GovCap`**: DAO governance operations
+- **`UploaderCap`**: Data upload and NFT minting
+- **`LabelerCap`**: Task claiming and submission
+- **`ValidatorCap`**: Task validation and review
 
 ## Getting Started
 
 ### Prerequisites
 
-- [Sui CLI & SDK](https://docs.sui.io/)  
-- Rust toolchain (for Move framework)  
-- Node.js (optional, for wallet integrations)
+- [Sui CLI](https://docs.sui.io/build/install) installed
+- Sui wallet configured
+- Basic understanding of Move programming
 
-### Build & Publish
+### Installation
+
+1. Clone the repository:
 
 ```bash
-# Build Move modules
-sui move build
+git clone https://github.com/memenow/byte-bazaar.git
+cd byte-bazaar
+```
 
-# Run unit tests
+2. Build the project:
+
+```bash
+sui move build
+```
+
+3. Run tests:
+
+```bash
 sui move test
 ```
 
-### Deploying to Testnet
+### Deployment
+
+1. Publish the package:
 
 ```bash
-# Publish package on Sui testnet
-sui client publish --gas-budget 1000000
+sui client publish --gas-budget 100000000
 ```
 
-Capture the on-chain package ID and update your front-end or client.
+2. Note the package ID and update your configuration accordingly.
 
----
+## Usage Examples
 
-## Project Layout
+### Minting a DataNFT
 
-```text
-├── Move.toml               # Package manifest
-├── sources/
-│   └── byte_bazaar.move    # Move module implementation
-├── test/
-│   └── byte_bazaar_tests.move  # Unit tests
-├── LICENSE                 # Apache License 2.0
-└── README.md               # Project documentation
+```move
+// Mint a new DataNFT with royalty information
+let (nft, policy) = nft::mint_data_nft(
+    &uploader_cap,
+    &publisher,
+    creator_address,
+    data_hash,
+    storage_url,
+    license_hash,
+    royalty_recipients,
+    royalty_basis_points,
+    ctx
+);
 ```
 
----
+### Creating a Labeling Task
 
-## Move Modules & APIs
+```move
+// Publish a new data labeling task
+let task = task::publish_task(
+    &uploader_cap,
+    dataset_id,
+    reward_coin,
+    deadline,
+    gold_hash, // Optional golden sample
+    &clock,
+    ctx
+);
+```
 
-- **`init(&mut TxContext)`**  
-  Initialize admin and marketplace capabilities.
+### DAO Proposal
 
-- **DataNFT API**  
-  - `mint_data_nft(...) → DataNFT`  
-  - `update_data_nft(&mut DataNFT, ...)`  
-  - `set_nft_active_status(&AdminCap, &mut DataNFT, bool)`
+```move
+// Create a governance proposal
+let action = dao::new_freeze_nft_action(nft_id, true);
+let proposal = dao::create_proposal(
+    &gov_cap,
+    action,
+    duration,
+    &clock,
+    ctx
+);
+```
 
-- **Marketplace API**  
-  - `list_nft(&mut Kiosk, &KioskOwnerCap, DataNFT, u64, &mut TxContext)`  
-  - `buy_nft(&mut Kiosk, &KioskOwnerCap, ID, Coin<SUI>, &mut TxContext) → DataNFT`
+## API Reference
 
-- **Task API**  
-  - `publish_task(ID, Coin<SUI>, u64, &Clock, &mut TxContext) → Task`  
-  - `claim_task(&mut Task, Coin<SUI>, &Clock, &mut TxContext)`  
-  - `submit_task_result(&mut Task, vector<u8>, &mut TxContext)`  
-  - `submit_review(&mut Task, bool, &mut TxContext)`  
-  - `finalize_task(&mut Task, &mut TxContext)`
+### DataNFT Functions
 
-- **DAO API**  
-  - `create_proposal(vector<u8>, u64, &Clock, &mut TxContext) → Proposal`  
-  - `vote_on_proposal(&mut Proposal, bool, u64, &Clock, &mut TxContext)`  
-  - `execute_proposal(&AdminCap, &mut Proposal, &Clock)`
+- `mint_data_nft()` - Create new data NFT
+- `update_data_nft()` - Update NFT metadata
+- `pay_royalty_and_confirm()` - Handle royalty payments
 
-Refer to `sources/byte_bazaar.move` for full signatures and error codes.
+### Marketplace Functions
 
----
+- `list_nft()` - List NFT for sale
+- `buy_nft()` - Purchase listed NFT
 
-## Development & Testing
+### Task Functions
 
-- **Unit Tests**: Defined in `test/byte_bazaar_tests.move`.  
-- **Code Coverage**: Extend existing tests to cover edge cases.  
-- **Linting**: Follow Sui Move style guidelines.  
+- `publish_task()` - Create labeling task
+- `claim_task()` - Claim task for completion
+- `submit_task_result()` - Submit completed work
+- `submit_review()` - Validate submitted work
+- `finalize_task()` - Complete task and distribute rewards
 
----
+### DAO Functions
+
+- `create_proposal()` - Submit governance proposal
+- `vote_on_proposal()` - Cast vote on proposal
+- `tally_proposal()` - Count votes after deadline
+- `execute_*_proposal()` - Execute approved proposals
+
+## Events
+
+The system emits comprehensive events for off-chain monitoring:
+
+- **DataNFT Events**: `DataNFTMintedEvent`, `DataNFTUpdatedEvent`, `StorageTicketEvent`
+- **Marketplace Events**: `NFTListedEvent`, `NFTPurchasedEvent`
+- **Task Events**: `TaskPublishedEvent`, `TaskClaimedEvent`, `TaskCompletedEvent`
+- **DAO Events**: `ProposalCreatedEvent`, `ProposalExecutedEvent`
+
+## Security Considerations
+
+- **Capability-based Access**: All sensitive operations require appropriate capabilities
+- **Consensus Mechanisms**: Multi-validator approval for task completion
+- **Escrow Protection**: Funds held securely until task completion
+- **Upgrade Controls**: DAO-governed smart contract upgrades
+- **Royalty Enforcement**: Automatic royalty collection prevents circumvention
+
+## Testing
+
+The project includes comprehensive tests covering:
+
+- NFT minting and trading workflows
+- Task lifecycle management
+- DAO governance processes
+- Error conditions and edge cases
+- Royalty calculation accuracy
+
+Run tests with:
+
+```bash
+sui move test
+```
 
 ## License
 
-This project is licensed under the **Apache License 2.0**. See [LICENSE](LICENSE) for details.
+This project is licensed under the Apache 2.0 License - see the [LICENSE](LICENSE) file for details.
